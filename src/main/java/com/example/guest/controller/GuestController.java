@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/appointments")
@@ -40,6 +42,18 @@ public class GuestController {
     public ResponseEntity<GuestResponse> createGuest(
             @PathVariable String appointment_id,
             @RequestBody GuestRequest request) {
+
+        // 검증 로직 추가
+        if (request.getUser_id() == null || request.getUser_id().trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "user_id는 필수입니다"));
+        }
+
+        if (request.getGuest_status() != null &&
+            !Arrays.asList("coming", "came", "noshow").contains(request.getGuest_status())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "guest_status는 coming, came, noshow 중 하나여야 합니다"));
+        }
+
+        // 검증 통과 후 비즈니스 로직 실행
         GuestResponse response = guestService.createGuest(appointment_id, request);
         return ResponseEntity.ok(response);
     }

@@ -71,18 +71,22 @@ public class GuestService {
      * 참가자 상태 변경
      */
     public GuestResponse updateGuestStatus(String appointmentId, String guestId, GuestRequest request) {
+        // 1. Guest 존재 여부 확인
         if (!guestRepository.existsByGuestId(guestId)) {
             throw new RuntimeException("참가자가 삭제되었거나 존재하지 않습니다. Guest ID: " + guestId);
         }
         
-        // JPA Repository의 updateStatus 메서드 사용
+        // 2. 알림 도착 여부 체크 (INV-G004, G005)
+        checkNotificationArrival(appointmentId);
+        
+        // 3. 상태 업데이트
         int updatedRows = guestRepository.updateGuestStatus(guestId, request.getGuest_status(), LocalDateTime.now());
         
         if (updatedRows == 0) {
             throw new RuntimeException("상태 업데이트에 실패했습니다. Guest ID: " + guestId);
         }
         
-        // 업데이트된 데이터 조회하여 반환
+        // 4. 업데이트된 데이터 조회하여 반환
         Guest updatedGuest = guestRepository.findById(guestId)
                 .orElseThrow(() -> new RuntimeException("업데이트된 데이터를 찾을 수 없습니다. Guest ID: " + guestId));
         
@@ -119,5 +123,18 @@ public class GuestService {
                 .created_at(guest.getCreated_at())
                 .updated_at(guest.getUpdated_at())
                 .build();
+    }
+
+    /**
+     * 알림 도착 여부 체크 메서드 (임시 구현)
+     */
+    private void checkNotificationArrival(String appointmentId) {
+        // 임시로 항상 통과하도록 구현
+        // 실제로는 Notification Service와 연동해야 함
+        System.out.println("알림 도착 체크: " + appointmentId);
+        
+        // TODO: 실제 Notification Service 연동 구현
+        // 1. 현재 시간과 end_time 비교
+        // 2. Notification Service에서 알림 도착 여부 확인
     }
 }
