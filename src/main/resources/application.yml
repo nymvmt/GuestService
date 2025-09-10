@@ -1,16 +1,14 @@
 server:
-  port: 8083
+  port: ${SERVER_PORT:8083}
 
 spring:
   application:
     name: guest-service
-  config:
-    import: optional:file:.env[.properties]
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: ${SPRING_DATASOURCE_DRIVER:com.mysql.cj.jdbc.Driver}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
@@ -23,19 +21,20 @@ spring:
     init:
       mode: never
 
+# 다른 서비스 URL 설정
+services:
+  user:
+    url: ${USER_SERVICE_URL}
+    api-key: ${USER_SERVICE_API_KEY}
+
 management:
   endpoints:
     web:
       exposure:
         include: health,info
-  endpoint:
-    health:
-      show-details: when-authorized
-  health:
-    db:
-      enabled: true
 
-# MSA 서비스 설정
-appointment:
-  service:
-    url: ${APPOINTMENT_SERVICE_URL:http://localhost:8081}
+---
+spring:
+  config:
+    activate:
+      on-profile: azure

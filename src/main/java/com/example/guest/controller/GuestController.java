@@ -1,5 +1,7 @@
 package com.example.guest.controller;
 
+import com.example.guest.client.UserServiceClient;
+import com.example.guest.dto.UserResponse;
 import com.example.guest.dto.request.GuestRequest;
 import com.example.guest.dto.response.GuestResponse;
 import com.example.guest.service.GuestService;
@@ -17,6 +19,9 @@ public class GuestController {
 
     @Autowired
     private GuestService guestService;
+    
+    @Autowired
+    private UserServiceClient userServiceClient;
 
     // 전체 약속 목록 조회 (Appointment Service 의존)
     @GetMapping
@@ -35,6 +40,13 @@ public class GuestController {
     public ResponseEntity<GuestResponse> createGuest(
             @PathVariable String appointment_id,
             @RequestBody GuestRequest request) {
+        
+        // UserService에서 사용자 정보 조회하여 검증
+        UserResponse userResponse = userServiceClient.getUserById(request.getUser_id());
+        if (userResponse == null) {
+            throw new RuntimeException("사용자를 찾을 수 없습니다. User ID: " + request.getUser_id());
+        }
+        
         GuestResponse response = guestService.createGuest(appointment_id, request);
         return ResponseEntity.ok(response);
     }
@@ -81,6 +93,12 @@ public class GuestController {
             // userId가 없으면 임시로 설정 (실제로는 인증에서 가져와야 함)
             if (userId == null) {
                 userId = "temp_user";
+            }
+            
+            // UserService에서 요청한 사용자 정보 조회하여 검증
+            UserResponse userResponse = userServiceClient.getUserById(userId);
+            if (userResponse == null) {
+                throw new RuntimeException("요청한 사용자를 찾을 수 없습니다. User ID: " + userId);
             }
             
             GuestResponse response = guestService.updateGuestStatus(appointment_id, guest_id, request, userId);
