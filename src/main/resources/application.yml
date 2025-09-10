@@ -3,9 +3,9 @@ server:
 
 spring:
   application:
-    name: guset-service
+    name: guest-service
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/guset_db?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/guest_db?serverTimezone=UTC&useSSL=false}
     username: ${SPRING_DATASOURCE_USERNAME:guest-service_user}
     password: ${SPRING_DATASOURCE_PASSWORD:Password@}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -16,7 +16,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.MySQL8Dialect
   sql: 
     init:
       mode: never
