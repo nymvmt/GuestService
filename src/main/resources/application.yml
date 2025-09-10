@@ -1,14 +1,16 @@
 server:
-  port: ${SERVER_PORT:8083}
+  port: 8083
 
 spring:
   application:
     name: guest-service
+  config:
+    import: optional:file:.env[.properties]
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/guest_db?serverTimezone=UTC&useSSL=false}
-    username: ${SPRING_DATASOURCE_USERNAME:guest-service_user}
-    password: ${SPRING_DATASOURCE_PASSWORD:Password@}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:com.mysql.cj.jdbc.Driver}
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
@@ -17,42 +19,10 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
-  sql: 
+  sql:
     init:
       mode: never
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-
-        server:
-  port: 8083  # 고정 포트 사용
-
-spring:
-  application:
-    name: guest-service
-  datasource:
-    # 환경변수로 데이터베이스 설정 오버라이드 가능하도록
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://mysql:3306/guest_service?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true}
-    username: ${SPRING_DATASOURCE_USERNAME:root}
-    password: ${SPRING_DATASOURCE_PASSWORD:password}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
-    open-in-view: false
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
-    show-sql: false  # 프로덕션에서는 false
-  sql: 
-    init:
-      mode: never
-
-# 헬스체크 설정 추가
 management:
   endpoints:
     web:

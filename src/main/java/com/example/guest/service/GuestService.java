@@ -30,7 +30,7 @@ public class GuestService {
                 .guest_id(guestId)
                 .appointment_id(appointmentId)
                 .user_id(request.getUser_id())
-                .guest_status(request.getGuest_status())
+                .guest_status(request.getGuest_status() != null ? request.getGuest_status() : "coming")
                 .created_at(LocalDateTime.now())
                 .updated_at(LocalDateTime.now())
                 .build();

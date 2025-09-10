@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "guest")
+@Table(name = "guests")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,7 +27,7 @@ public class Guest {
     private String user_id;
     
     @Column(name = "guest_status")
-    private String guest_status;
+    private String guest_status = "coming";  // 기본값 설정
     
     @Column(name = "created_at")
     private LocalDateTime created_at;
