@@ -58,3 +58,4 @@ jobs:
       - name: Post logout Docker Hub
         if: always()
         run: docker logout
+

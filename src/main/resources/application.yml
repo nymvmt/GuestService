@@ -1,21 +1,25 @@
 server:
-  port: 8083
+  port: ${SERVER_PORT:8083}
 
 spring:
   application:
-    name: guest-service
+    name: guset-service
   datasource:
-    url: jdbc:mysql://localhost:3306/guest_db?createDatabaseIfNotExist=true
-    username: guest-service_user
-    password: Password@
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/guset_db?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:guest-service_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:Password@}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+  sql: 
+    init:
+      mode: never
 
 management:
   endpoints:
