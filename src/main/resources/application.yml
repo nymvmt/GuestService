@@ -34,3 +34,8 @@ management:
   health:
     db:
       enabled: true
+
+# MSA 서비스 설정
+appointment:
+  service:
+    url: ${APPOINTMENT_SERVICE_URL:http://localhost:8081}

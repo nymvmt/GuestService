@@ -5,11 +5,16 @@ import com.example.guest.dto.response.GuestResponse;
 import com.example.guest.entity.Guest;
 import com.example.guest.repository.GuestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,6 +24,12 @@ public class GuestService {
 
     @Autowired
     private GuestRepository guestRepository;
+    
+    @Autowired
+    private RestTemplate restTemplate;
+    
+    @Value("${appointment.service.url:http://localhost:8081}")
+    private String appointmentServiceUrl;
 
     /**
      * 약속 참가자 등록
@@ -70,14 +81,19 @@ public class GuestService {
     /**
      * 참가자 상태 변경
      */
-    public GuestResponse updateGuestStatus(String appointmentId, String guestId, GuestRequest request) {
+    public GuestResponse updateGuestStatus(String appointmentId, String guestId, GuestRequest request, String userId) {
         // 1. Guest 존재 여부 확인
         if (!guestRepository.existsByGuestId(guestId)) {
             throw new RuntimeException("참가자가 삭제되었거나 존재하지 않습니다. Guest ID: " + guestId);
         }
         
-        // 2. 알림 도착 여부 체크 (INV-G004, G005)
-        checkNotificationArrival(appointmentId);
+        // 2. 호스트 권한 검증
+        if (!isHost(appointmentId, userId)) {
+            throw new RuntimeException("호스트가 아닌 사용자는 상태를 변경할 수 없습니다.");
+        }
+        
+        // 3. 알림 도착 여부 체크는 Notification Service에서 처리
+        // Guest Service는 상태 변경 요청을 받으면 바로 처리
         
         // 3. 상태 업데이트
         int updatedRows = guestRepository.updateGuestStatus(guestId, request.getGuest_status(), LocalDateTime.now());
@@ -105,10 +121,12 @@ public class GuestService {
     }
 
     /**
-     * Guest ID 생성 (임시)
+     * Guest ID 생성 (순차적)
      */
     private String generateGuestId() {
-        return "guest_" + UUID.randomUUID().toString().substring(0, 8);
+        // 현재 시간 기반으로 순차적 ID 생성
+        long timestamp = System.currentTimeMillis();
+        return "guest" + timestamp;
     }
 
     /**
@@ -126,15 +144,60 @@ public class GuestService {
     }
 
     /**
-     * 알림 도착 여부 체크 메서드 (임시 구현)
+     * Appointment Service에서 전체 약속 목록 조회
      */
-    private void checkNotificationArrival(String appointmentId) {
-        // 임시로 항상 통과하도록 구현
-        // 실제로는 Notification Service와 연동해야 함
-        System.out.println("알림 도착 체크: " + appointmentId);
-        
-        // TODO: 실제 Notification Service 연동 구현
-        // 1. 현재 시간과 end_time 비교
-        // 2. Notification Service에서 알림 도착 여부 확인
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<Map<String, Object>> getAllAppointments() {
+        try {
+            String url = appointmentServiceUrl + "/appointments";
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            return ResponseEntity.ok((Map<String, Object>) response.getBody());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", "Appointment Service 연결 실패: " + e.getMessage()));
+        }
     }
+
+    /**
+     * Appointment Service에서 특정 약속 상세 조회
+     */
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<Map<String, Object>> getAppointment(String appointmentId) {
+        try {
+            String url = appointmentServiceUrl + "/appointments/" + appointmentId;
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            return ResponseEntity.ok((Map<String, Object>) response.getBody());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", "Appointment Service 연결 실패: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Appointment Service에서 약속 정보 조회 (내부용)
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getAppointmentInfo(String appointmentId) {
+        try {
+            String url = appointmentServiceUrl + "/appointments/" + appointmentId;
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            return (Map<String, Object>) response.getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("Appointment Service 연결 실패: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 호스트 권한 검증
+     */
+    private boolean isHost(String appointmentId, String userId) {
+        try {
+            Map<String, Object> appointment = getAppointmentInfo(appointmentId);
+            String hostId = (String) appointment.get("host_id");
+            return userId.equals(hostId);
+        } catch (Exception e) {
+            throw new RuntimeException("호스트 권한 검증 실패: " + e.getMessage());
+        }
+    }
+
 }

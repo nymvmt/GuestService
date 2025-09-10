@@ -21,18 +21,13 @@ public class GuestController {
     // 전체 약속 목록 조회 (Appointment Service 의존)
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllAppointments() {
-        // TODO: Appointment Service 호출 구현
-        return ResponseEntity.ok(Map.of("message", "전체 약속 목록 조회 - 구현 예정"));
+        return guestService.getAllAppointments();
     }
 
     // 약속 상세 조회 (Appointment Service 의존)
     @GetMapping("/{appointment_id}")
     public ResponseEntity<Map<String, Object>> getAppointment(@PathVariable String appointment_id) {
-        // TODO: Appointment Service 호출 구현
-        return ResponseEntity.ok(Map.of(
-            "message", "약속 상세 조회 - 구현 예정",
-            "appointment_id", appointment_id
-        ));
+        return guestService.getAppointment(appointment_id);
     }
 
     // 약속 guest 등록
@@ -76,11 +71,27 @@ public class GuestController {
 
     // 참가자 상태 변경
     @PatchMapping("/{appointment_id}/guests/{guest_id}/guest_status")
-    public ResponseEntity<GuestResponse> updateGuestStatus(
+    public ResponseEntity<Object> updateGuestStatus(
             @PathVariable String appointment_id,
             @PathVariable String guest_id,
-            @RequestBody GuestRequest request) {
-        GuestResponse response = guestService.updateGuestStatus(appointment_id, guest_id, request);
-        return ResponseEntity.ok(response);
+            @RequestBody GuestRequest request,
+            @RequestHeader(value = "X-User-ID", required = false) String userId) {
+        
+        try {
+            // userId가 없으면 임시로 설정 (실제로는 인증에서 가져와야 함)
+            if (userId == null) {
+                userId = "temp_user";
+            }
+            
+            GuestResponse response = guestService.updateGuestStatus(appointment_id, guest_id, request, userId);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            String message = e.getMessage();
+            if (message.contains("호스트가 아닌 사용자")) {
+                return ResponseEntity.status(403).body(Map.of("error", message));
+            } else {
+                return ResponseEntity.status(400).body(Map.of("error", message));
+            }
+        }
     }
 }
