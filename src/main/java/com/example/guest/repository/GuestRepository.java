@@ -43,6 +43,13 @@ public interface GuestRepository extends JpaRepository<Guest, String> {
                                                 @Param("userId") String userId);
 
     /**
+     * 특정 약속에 특정 사용자가 이미 참여했는지 확인 (중복 체크용)
+     */
+    @Query("SELECT COUNT(g) > 0 FROM Guest g WHERE g.appointment_id = :appointmentId AND g.user_id = :userId")
+    boolean existsByAppointmentIdAndUserId(@Param("appointmentId") String appointmentId, 
+                                          @Param("userId") String userId);
+
+    /**
      * 특정 상태의 Guest들 조회
      */
     @Query("SELECT g FROM Guest g WHERE g.guest_status = :guestStatus")

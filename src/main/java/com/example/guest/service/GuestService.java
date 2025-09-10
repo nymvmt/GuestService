@@ -24,6 +24,11 @@ public class GuestService {
      * 약속 참가자 등록
      */
     public GuestResponse createGuest(String appointmentId, GuestRequest request) {
+        // 중복 체크 추가
+        if (guestRepository.existsByAppointmentIdAndUserId(appointmentId, request.getUser_id())) {
+            throw new RuntimeException("이미 해당 약속에 참여하고 있습니다.");
+        }
+        
         String guestId = generateGuestId();
         
         Guest guest = Guest.builder()
