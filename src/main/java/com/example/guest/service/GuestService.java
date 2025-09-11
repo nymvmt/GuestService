@@ -1,9 +1,12 @@
 package com.example.guest.service;
 
+import com.example.guest.client.AppointmentServiceClient;
+import com.example.guest.dto.AppointmentResponse;
 import com.example.guest.dto.request.GuestRequest;
 import com.example.guest.dto.response.GuestResponse;
 import com.example.guest.entity.Guest;
 import com.example.guest.repository.GuestRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -20,6 +23,7 @@ import java.util.UUID;
 
 @Service
 @Transactional
+@Slf4j
 public class GuestService {
 
     @Autowired
@@ -28,7 +32,10 @@ public class GuestService {
     @Autowired
     private RestTemplate restTemplate;
     
-    @Value("${appointment.service.url:http://localhost:8081}")
+    @Autowired
+    private AppointmentServiceClient appointmentServiceClient;
+    
+    @Value("${services.appointment.url:http://localhost:8081}")
     private String appointmentServiceUrl;
 
     /**
@@ -188,14 +195,35 @@ public class GuestService {
     }
 
     /**
-     * 호스트 권한 검증
+     * 호스트 권한 검증 - WebClient 사용으로 변경 (디버깅 로그 추가)
      */
     private boolean isHost(String appointmentId, String userId) {
+        log.info("🔍 호스트 권한 검증 시작 - appointmentId: {}, userId: {}", appointmentId, userId);
+        
         try {
-            Map<String, Object> appointment = getAppointmentInfo(appointmentId);
-            String hostId = (String) appointment.get("host_id");
-            return userId.equals(hostId);
+            AppointmentResponse appointment = appointmentServiceClient.getAppointmentById(appointmentId);
+            if (appointment == null) {
+                log.error("❌ 약속을 찾을 수 없음 - appointmentId: {}", appointmentId);
+                throw new RuntimeException("약속을 찾을 수 없습니다. Appointment ID: " + appointmentId);
+            }
+            
+            // camelCase 필드명 사용 (AppointmentResponse의 hostId 필드)
+            String hostId = appointment.getHostId();
+            log.info("📋 Appointment 정보 조회 성공 - appointmentId: {}, hostId: {}, title: {}", 
+                    appointmentId, hostId, appointment.getTitle());
+            
+            boolean isHostUser = userId.equals(hostId);
+            log.info("🔐 권한 검증 결과 - 요청사용자: '{}', 호스트: '{}', 권한있음: {}", 
+                    userId, hostId, isHostUser);
+            
+            if (!isHostUser) {
+                log.warn("⚠️ 호스트 권한 없음 - 요청사용자 '{}' != 호스트 '{}'", userId, hostId);
+            }
+            
+            return isHostUser;
         } catch (Exception e) {
+            log.error("💥 호스트 권한 검증 실패 - appointmentId: {}, userId: {}, error: {}", 
+                    appointmentId, userId, e.getMessage(), e);
             throw new RuntimeException("호스트 권한 검증 실패: " + e.getMessage());
         }
     }
