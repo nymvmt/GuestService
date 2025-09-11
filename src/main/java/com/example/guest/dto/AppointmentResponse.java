@@ -12,12 +12,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AppointmentResponse {
-    private String appointmentId;
-    private String hostId;
+    private String appointment_id;
+    private String host_id;
+    private String host_username;
+    private String host_nickname;
     private String title;
     private String description;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
-    private String locationId;
-    private String appointmentStatus; // enum 대신 String으로 받기
+    private LocalDateTime start_time;
+    private LocalDateTime end_time;
+    private String location_id;
+    private String appointment_status;
 }

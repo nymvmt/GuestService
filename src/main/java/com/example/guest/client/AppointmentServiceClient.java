@@ -34,6 +34,7 @@ public class AppointmentServiceClient {
                     .defaultHeader("Appointment-Agent", "appointment-service/1.0")
                     .build();
             
+            // Appointment Service는 snake_case로 응답하므로 그대로 사용
             List<AppointmentResponse> appointments = webClient
                     .get()
                     .uri("/appointments")
