@@ -174,15 +174,23 @@ public class GuestController {
             @RequestBody GuestRequest request,
             @RequestHeader(value = "X-User-ID", required = false) String userId) {
         
+        log.info("🚀 [API 요청 시작] PATCH /appointments/{}/guests/{}/guest_status - appointment_id: {}, guest_id: {}, userId: {}, newStatus: {}", 
+                appointment_id, appointment_id, guest_id, appointment_id, guest_id, userId, request.getGuest_status());
+        
         try {
             // AppointmentService에서 약속 존재 여부 확인
             if (!appointmentServiceClient.existsAppointment(appointment_id)) {
                 return ResponseEntity.status(404).body(Map.of("error", "약속을 찾을 수 없습니다"));
             }
             
-            // userId가 없으면 임시로 설정 (실제로는 인증에서 가져와야 함)
+            // userId가 없으면 에러 발생
             if (userId == null) {
-                userId = "temp_user";
+                log.error("❌ [API 요청 실패] X-User-ID 헤더가 누락됨 - appointment_id: {}, guest_id: {}", appointment_id, guest_id);
+                return ResponseEntity.status(400).body(Map.of(
+                    "error", "X-User-ID 헤더가 필요합니다",
+                    "appointment_id", appointment_id,
+                    "guest_id", guest_id
+                ));
             }
             
             // UserService에서 요청한 사용자 정보 조회하여 검증 (기존 코드 유지)
@@ -191,14 +199,38 @@ public class GuestController {
                 throw new RuntimeException("요청한 사용자를 찾을 수 없습니다. User ID: " + userId);
             }
             
+            log.info("🔍 [Guest Service] 상태 변경 시작 - appointment_id: {}, guest_id: {}, userId: {}", appointment_id, guest_id, userId);
+            
             GuestResponse response = guestService.updateGuestStatus(appointment_id, guest_id, request, userId);
-            return ResponseEntity.ok(response);
+            
+            log.info("✅ [API 요청 성공] PATCH /appointments/{}/guests/{}/guest_status - appointment_id: {}, guest_id: {}, newStatus: {}", 
+                    appointment_id, appointment_id, guest_id, appointment_id, guest_id, response.getGuest_status());
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "참가자 상태 변경 완료",
+                "data", response
+            ));
+            
         } catch (RuntimeException e) {
             String message = e.getMessage();
+            log.error("💥 [API 요청 실패] PATCH /appointments/{}/guests/{}/guest_status - appointment_id: {}, guest_id: {}, userId: {}, error: {}", 
+                    appointment_id, appointment_id, guest_id, appointment_id, guest_id, userId, message, e);
+            
             if (message.contains("호스트가 아닌 사용자")) {
-                return ResponseEntity.status(403).body(Map.of("error", message));
+                return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "error", message,
+                    "appointment_id", appointment_id,
+                    "guest_id", guest_id
+                ));
             } else {
-                return ResponseEntity.status(400).body(Map.of("error", message));
+                return ResponseEntity.status(400).body(Map.of(
+                    "success", false,
+                    "error", message,
+                    "appointment_id", appointment_id,
+                    "guest_id", guest_id
+                ));
             }
         }
     }

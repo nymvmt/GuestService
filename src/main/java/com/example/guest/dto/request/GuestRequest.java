@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GuestRequest {
     
-    private String user_id;
+    private String user_id;  // Guest 등록 시에만 사용
     private String guest_status;
 }

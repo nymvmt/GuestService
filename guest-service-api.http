@@ -4,8 +4,8 @@
 #@baseUrl = http://localhost:8083
 
 @appointmentId = appo005
-@guestId = guest1757564999875
-@userId = id@kt.com
+@guestId = guest1757565858972
+@userId = testuser002@kt.com
 @hostId = testuser001@kt.com
 
 ### ===========================================
@@ -85,6 +85,15 @@ X-User-ID: {{hostId}}
   "guest_status": "pending"
 }
 
+### 3-5. Guest 상태를 "noshow"로 변경
+PATCH {{baseUrl}}/appointments/{{appointmentId}}/guests/{{guestId}}/guest_status
+Content-Type: application/json
+X-User-ID: {{hostId}}
+
+{
+  "guest_status": "noshow"
+}
+
 ### ===========================================
 ### 4. 권한 오류 테스트 (호스트가 아닌 사용자)
 ### ===========================================
@@ -98,9 +107,27 @@ X-User-ID: {{userId}}
   "guest_status": "came"
 }
 
-### 4-2. 헤더 없이 상태 변경 시도
+### 4-2. 헤더 없이 상태 변경 시도 (400 오류 예상)
 PATCH {{baseUrl}}/appointments/{{appointmentId}}/guests/{{guestId}}/guest_status
 Content-Type: application/json
+
+{
+  "guest_status": "came"
+}
+
+### 4-3. 잘못된 상태값으로 변경 시도 (400 오류 예상)
+PATCH {{baseUrl}}/appointments/{{appointmentId}}/guests/{{guestId}}/guest_status
+Content-Type: application/json
+X-User-ID: {{hostId}}
+
+{
+  "guest_status": "invalid_status"
+}
+
+### 4-4. 존재하지 않는 Guest ID로 상태 변경 시도 (400 오류 예상)
+PATCH {{baseUrl}}/appointments/{{appointmentId}}/guests/nonexistent-guest/guest_status
+Content-Type: application/json
+X-User-ID: {{hostId}}
 
 {
   "guest_status": "came"
