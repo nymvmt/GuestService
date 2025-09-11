@@ -42,7 +42,18 @@ public class GuestService {
      * 약속 참가자 등록
      */
     public GuestResponse createGuest(String appointmentId, GuestRequest request) {
-        // 중복 체크 추가
+        // 1. 약속 정보 조회하여 호스트 확인
+        try {
+            var appointment = appointmentServiceClient.getAppointmentById(appointmentId);
+            if (appointment != null && appointment.getHostId().equals(request.getUser_id())) {
+                throw new RuntimeException("내가 호스트인 약속에는 참여할 수 없어요!");
+            }
+        } catch (Exception e) {
+            log.error("약속 정보 조회 실패: {}", appointmentId, e);
+            throw new RuntimeException("약속 정보를 확인할 수 없습니다.");
+        }
+        
+        // 2. 중복 체크 추가
         if (guestRepository.existsByAppointmentIdAndUserId(appointmentId, request.getUser_id())) {
             throw new RuntimeException("이미 해당 약속에 참여하고 있습니다.");
         }
