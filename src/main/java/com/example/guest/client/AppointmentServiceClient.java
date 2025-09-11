@@ -21,8 +21,6 @@ public class AppointmentServiceClient {
     @Value("${services.appointment.url}")
     private String appointmentServiceUrl;
     
-    @Value("${services.appointment.api-key}")
-    private String apiKey;
     
     /**
      * 전체 약속 목록 조회
@@ -33,7 +31,6 @@ public class AppointmentServiceClient {
         try {
             WebClient webClient = webClientBuilder
                     .baseUrl(appointmentServiceUrl)
-                    .defaultHeader("X-API-Key", apiKey)
                     .defaultHeader("Appointment-Agent", "appointment-service/1.0")
                     .build();
             
@@ -67,7 +64,6 @@ public class AppointmentServiceClient {
         try {
             WebClient webClient = webClientBuilder
                     .baseUrl(appointmentServiceUrl)
-                    .defaultHeader("X-API-Key", apiKey)
                     .defaultHeader("Appointment-Agent", "appointment-service/1.0")
                     .build();
             
@@ -118,7 +114,6 @@ public class AppointmentServiceClient {
         try {
             WebClient webClient = webClientBuilder
                     .baseUrl(appointmentServiceUrl)
-                    .defaultHeader("X-API-Key", apiKey)
                     .defaultHeader("Appointment-Agent", "appointment-service/1.0")
                     .build();
             

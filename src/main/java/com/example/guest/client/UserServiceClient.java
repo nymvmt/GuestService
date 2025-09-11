@@ -19,8 +19,6 @@ public class UserServiceClient {
     @Value("${services.user.url}")
     private String userServiceUrl;
     
-    @Value("${services.user.api-key}")
-    private String apiKey;
     
     public UserResponse getUserById(String userId) {
         log.info("UserService에서 사용자 정보 조회 시작 - userId: {}", userId);
@@ -31,7 +29,6 @@ public class UserServiceClient {
             try {
                 WebClient webClient = webClientBuilder
                         .baseUrl(userServiceUrl)
-                        .defaultHeader("X-API-Key", apiKey)
                         .defaultHeader("User-Agent", "guest-service/1.0")
                         .build();
                 
@@ -81,7 +78,6 @@ public class UserServiceClient {
             try {
                 WebClient webClient = webClientBuilder
                         .baseUrl(userServiceUrl)
-                        .defaultHeader("X-API-Key", apiKey)
                         .defaultHeader("User-Agent", "guest-service/1.0")
                         .build();
                 
