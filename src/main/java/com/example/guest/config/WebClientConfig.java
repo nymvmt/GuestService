@@ -15,43 +15,28 @@ import javax.net.ssl.SSLException;
 @Configuration
 public class WebClientConfig {
     
-    @Value("${services.appointment.url}")
-    private String appointmentServiceUrl;
-    
-    @Value("${services.appointment.api-key}")
-    private String appointmentApiKey;
-    
-    @Value("${spring.profiles.active:dev}")
-    private String activeProfile;
+    @Value("${app.ssl.trust-all:false}")
+    private boolean trustAllCertificates;
     
     @Bean
     public WebClient.Builder webClientBuilder() throws SSLException {
         HttpClient httpClient;
         
-        // 환경별 SSL 설정
-        if ("prod".equals(activeProfile)) {
-            // 운영환경: 안전한 SSL 설정
-            httpClient = HttpClient.create().secure();
-        } else {
-            // 개발환경: 인증서 검증 비활성화
+        if (trustAllCertificates) {
+            // 개발환경에서는 인증서 검증 비활성화
             SslContext sslContext = SslContextBuilder
                     .forClient()
                     .trustManager(InsecureTrustManagerFactory.INSTANCE)
                     .build();
+            
             httpClient = HttpClient.create()
                     .secure(sslContextSpec -> sslContextSpec.sslContext(sslContext));
+        } else {
+            // Azure/프로덕션 환경에서는 기본 SSL 설정 사용
+            httpClient = HttpClient.create();
         }
         
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient));
-    }
-    
-    @Bean("appointmentWebClient")
-    public WebClient appointmentWebClient(WebClient.Builder webClientBuilder) {
-        return webClientBuilder
-                .baseUrl(appointmentServiceUrl)
-                .defaultHeader("X-API-Key", appointmentApiKey)
-                .defaultHeader("User-Agent", "guest-service/1.0")
-                .build();
     }
 }

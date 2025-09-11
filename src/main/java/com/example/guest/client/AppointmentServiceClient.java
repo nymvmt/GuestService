@@ -3,7 +3,7 @@ package com.example.guest.client;
 import com.example.guest.dto.AppointmentResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -16,8 +16,13 @@ import java.util.List;
 @Slf4j
 public class AppointmentServiceClient {
     
-    @Qualifier("appointmentWebClient")
-    private final WebClient appointmentWebClient;
+    private final WebClient.Builder webClientBuilder;
+    
+    @Value("${services.appointment.url}")
+    private String appointmentServiceUrl;
+    
+    @Value("${services.appointment.api-key}")
+    private String apiKey;
     
     /**
      * 전체 약속 목록 조회
@@ -26,7 +31,13 @@ public class AppointmentServiceClient {
         log.info("AppointmentService에서 전체 약속 목록 조회 시작");
         
         try {
-            List<AppointmentResponse> appointments = appointmentWebClient
+            WebClient webClient = webClientBuilder
+                    .baseUrl(appointmentServiceUrl)
+                    .defaultHeader("X-API-Key", apiKey)
+                    .defaultHeader("Appointment-Agent", "appointment-service/1.0")
+                    .build();
+            
+            List<AppointmentResponse> appointments = webClient
                     .get()
                     .uri("/appointments")
                     .retrieve()
@@ -54,7 +65,13 @@ public class AppointmentServiceClient {
         log.info("AppointmentService에서 약속 상세 조회 시작 - appointmentId: {}", appointmentId);
         
         try {
-            AppointmentResponse appointment = appointmentWebClient
+            WebClient webClient = webClientBuilder
+                    .baseUrl(appointmentServiceUrl)
+                    .defaultHeader("X-API-Key", apiKey)
+                    .defaultHeader("Appointment-Agent", "appointment-service/1.0")
+                    .build();
+            
+            AppointmentResponse appointment = webClient
                     .get()
                     .uri("/appointments/{appointmentId}", appointmentId)
                     .retrieve()
@@ -85,7 +102,7 @@ public class AppointmentServiceClient {
     }
     
     /**
-     * 약속 존재 여부 확인
+     * 약속 존재 여부 확인 (Guest 등록 전 검증용)
      */
     public boolean existsAppointment(String appointmentId) {
         AppointmentResponse appointment = getAppointmentById(appointmentId);
@@ -93,13 +110,19 @@ public class AppointmentServiceClient {
     }
     
     /**
-     * 호스트 ID로 약속 목록 조회
+     * 호스트 ID로 약속 목록 조회 (상태 변경 권한 확인용)
      */
     public List<AppointmentResponse> getAppointmentsByHostId(String hostId) {
         log.info("AppointmentService에서 호스트 약속 목록 조회 시작 - hostId: {}", hostId);
         
         try {
-            List<AppointmentResponse> appointments = appointmentWebClient
+            WebClient webClient = webClientBuilder
+                    .baseUrl(appointmentServiceUrl)
+                    .defaultHeader("X-API-Key", apiKey)
+                    .defaultHeader("Appointment-Agent", "appointment-service/1.0")
+                    .build();
+            
+            List<AppointmentResponse> appointments = webClient
                     .get()
                     .uri("/appointments/host/{hostId}", hostId)
                     .retrieve()
