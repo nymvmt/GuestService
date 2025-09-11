@@ -7,6 +7,7 @@ import com.example.guest.dto.UserResponse;
 import com.example.guest.dto.request.GuestRequest;
 import com.example.guest.dto.response.GuestResponse;
 import com.example.guest.service.GuestService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/appointments")
 @CrossOrigin(origins = "*")
+@Slf4j
 public class GuestController {
 
     @Autowired
@@ -96,6 +98,13 @@ public class GuestController {
         return ResponseEntity.ok(guests);
     }
 
+    // 약속 개별 조회
+    @GetMapping("/{appointment_id}/guests/{guest_id}")
+    public ResponseEntity<GuestResponse> getGuest(@PathVariable String appointment_id, @PathVariable String guest_id) {
+        GuestResponse guest = guestService.getGuest(appointment_id, guest_id);
+        return ResponseEntity.ok(guest);
+    }
+
     // 참가 취소
     @DeleteMapping("/{appointment_id}/guests/{guest_id}")
     public ResponseEntity<Map<String, Object>> deleteGuest(
@@ -120,19 +129,41 @@ public class GuestController {
         ));
     }
 
-    // 참가자 상태 조회
+    // 참가자 상태 조회 (상태만 String으로 반환)
     @GetMapping("/{appointment_id}/guests/{guest_id}/guest_status")
-    public ResponseEntity<GuestResponse> getGuestStatus(
+    public ResponseEntity<Map<String, Object>> getGuestStatus(
             @PathVariable String appointment_id,
             @PathVariable String guest_id) {
         
-        // AppointmentService에서 약속 존재 여부 확인
-        if (!appointmentServiceClient.existsAppointment(appointment_id)) {
-            throw new RuntimeException("약속을 찾을 수 없습니다. Appointment ID: " + appointment_id);
-        }
+        log.info("🚀 [API 요청 시작] GET /appointments/{}/guests/{}/guest_status - appointment_id: {}, guest_id: {}", 
+                appointment_id, appointment_id, guest_id, appointment_id, guest_id);
         
-        GuestResponse response = guestService.getGuestStatus(appointment_id, guest_id);
-        return ResponseEntity.ok(response);
+        try {
+            // Guest Service에서 상태만 조회 (getGuest 메서드 재사용)
+            log.info("🔍 [Guest Service] 상태 조회 시작 - appointment_id: {}, guest_id: {}", appointment_id, guest_id);
+            
+            String status = guestService.getGuestStatus(appointment_id, guest_id);
+            
+            // 상태만 포함한 응답 생성
+            Map<String, Object> response = Map.of(
+                "guest_status", status
+            );
+            
+            log.info("✅ [API 요청 성공] GET /appointments/{}/guests/{}/guest_status - appointment_id: {}, guest_id: {}, status: {}", 
+                    appointment_id, appointment_id, guest_id, appointment_id, guest_id, status);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("💥 [API 요청 실패] GET /appointments/{}/guests/{}/guest_status - appointment_id: {}, guest_id: {}, error: {}", 
+                    appointment_id, appointment_id, guest_id, appointment_id, guest_id, e.getMessage(), e);
+            
+            return ResponseEntity.status(400).body(Map.of(
+                "error", e.getMessage(),
+                "appointment_id", appointment_id,
+                "guest_id", guest_id
+            ));
+        }
     }
 
     // 참가자 상태 변경

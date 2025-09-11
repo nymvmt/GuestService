@@ -1,11 +1,11 @@
 ### Guest Service API Tests
 ### Base URL
-# @baseUrl = https://kt-pj2-guest-app-d7d0e6gagqgggza7.koreacentral-01.azurewebsites.net
-@baseUrl = http://localhost:8083
+@baseUrl = https://kt-pj2-guest-app-d7d0e6gagqgggza7.koreacentral-01.azurewebsites.net
+#@baseUrl = http://localhost:8083
 
 @appointmentId = appo005
 @guestId = guest1757564999875
-@userId = testuser002@kt.com
+@userId = id@kt.com
 @hostId = testuser001@kt.com
 
 ### ===========================================
@@ -37,8 +37,12 @@ Content-Type: application/json
 GET {{baseUrl}}/appointments/{{appointmentId}}/guests
 Content-Type: application/json
 
-### 2-3. 특정 Guest 상태 조회
+### 2-3. 특정 Guest 상태 조회 (상태 정보만 반환)
 GET {{baseUrl}}/appointments/{{appointmentId}}/guests/{{guestId}}/guest_status
+Content-Type: application/json
+
+### 2-4. 특정 Guest 전체 정보 조회 (상태 외 다른 정보도 포함)
+GET {{baseUrl}}/appointments/{{appointmentId}}/guests/{{guestId}}
 Content-Type: application/json
 
 ### ===========================================

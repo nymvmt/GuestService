@@ -72,17 +72,56 @@ public class GuestService {
                 .map(this::convertToResponse)
                 .toList();
     }
+    
+    /**
+     * 약속 개별 참가자 조회
+     */
+
+
+    @Transactional(readOnly = true)
+    public GuestResponse getGuest(String appointmentId, String guestId) {
+        log.info("🔍 [GuestService] getGuest 시작 - appointmentId: {}, guestId: {}", appointmentId, guestId);
+        
+        // 1. Guest 존재 여부 확인
+        Optional<Guest> guestOptional = guestRepository.findById(guestId);
+        if (guestOptional.isEmpty()) {
+            log.error("❌ [GuestService] Guest를 찾을 수 없음 - guestId: {}", guestId);
+            throw new RuntimeException("참가자를 찾을 수 없습니다. Guest ID: " + guestId);
+        }
+        
+        Guest guest = guestOptional.get();
+        
+        // 2. 해당 Guest가 지정된 약속에 속하는지 확인
+        if (!appointmentId.equals(guest.getAppointment_id())) {
+            log.error("❌ [GuestService] Guest가 지정된 약속에 속하지 않음 - appointmentId: {}, guestId: {}, actualAppointmentId: {}", 
+                    appointmentId, guestId, guest.getAppointment_id());
+            throw new RuntimeException("해당 참가자는 이 약속에 속하지 않습니다. Guest ID: " + guestId + 
+                    ", Appointment ID: " + appointmentId);
+        }
+        
+        log.info("✅ [GuestService] getGuest 완료 - appointmentId: {}, guestId: {}, userId: {}, status: {}", 
+                appointmentId, guestId, guest.getUser_id(), guest.getGuest_status());
+        
+        return convertToResponse(guest);
+    }
 
     /**
-     * 참가자 상태 조회
+     * 참가자 상태 조회 (상태만 String으로 반환)
      */
     @Transactional(readOnly = true)
-    public GuestResponse getGuestStatus(String appointmentId, String guestId) {
-        Optional<Guest> guest = guestRepository.findById(guestId);
-        if (guest.isEmpty()) {
-            throw new RuntimeException("참가자가 삭제되었거나 존재하지 않습니다. Guest ID: " + guestId);
-        }
-        return convertToResponse(guest.get());
+    public String getGuestStatus(String appointmentId, String guestId) {
+        log.info("🔍 [GuestService] getGuestStatus 시작 - appointmentId: {}, guestId: {}", appointmentId, guestId);
+        
+        // 기존 getGuest 메서드를 재사용하여 전체 정보 조회
+        GuestResponse guestResponse = getGuest(appointmentId, guestId);
+        
+        // guest_status만 추출하여 반환
+        String status = guestResponse.getGuest_status();
+        
+        log.info("✅ [GuestService] getGuestStatus 완료 - appointmentId: {}, guestId: {}, status: {}", 
+                appointmentId, guestId, status);
+        
+        return status;
     }
 
     /**
