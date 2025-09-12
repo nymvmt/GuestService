@@ -61,4 +61,10 @@ public interface GuestRepository extends JpaRepository<Guest, String> {
     @Query("SELECT g FROM Guest g WHERE g.appointment_id = :appointmentId AND g.guest_status = :guestStatus")
     List<Guest> findByAppointmentIdAndGuestStatus(@Param("appointmentId") String appointmentId, 
                                                  @Param("guestStatus") String guestStatus);
+
+    /**
+     * 특정 사용자가 참여한 모든 Guest 조회
+     */
+    @Query("SELECT g FROM Guest g WHERE g.user_id = :userId")
+    List<Guest> findByUserId(@Param("userId") String userId);
 }

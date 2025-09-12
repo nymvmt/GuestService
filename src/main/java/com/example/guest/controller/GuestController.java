@@ -166,6 +166,27 @@ public class GuestController {
         }
     }
 
+    // 특정 사용자가 참여한 모든 게스트 정보 조회
+    @GetMapping("/guests/user/{user_id}")
+    public ResponseEntity<List<GuestResponse>> getGuestsByUserId(@PathVariable String user_id) {
+        log.info("🚀 [API 요청 시작] GET /appointments/guests/user/{} - user_id: {}", user_id, user_id);
+        
+        try {
+            List<GuestResponse> guests = guestService.getGuestsByUserId(user_id);
+            
+            log.info("✅ [API 요청 성공] GET /appointments/guests/user/{} - user_id: {}, 게스트 수: {}", 
+                    user_id, user_id, guests.size());
+            
+            return ResponseEntity.ok(guests);
+            
+        } catch (Exception e) {
+            log.error("💥 [API 요청 실패] GET /appointments/guests/user/{} - user_id: {}, error: {}", 
+                    user_id, user_id, e.getMessage(), e);
+            
+            return ResponseEntity.status(500).body(List.of());
+        }
+    }
+
     // 참가자 상태 변경
     @PatchMapping("/{appointment_id}/guests/{guest_id}/guest_status")
     public ResponseEntity<Object> updateGuestStatus(

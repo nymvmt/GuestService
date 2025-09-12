@@ -245,6 +245,22 @@ public class GuestService {
     }
 
     /**
+     * 특정 사용자가 참여한 모든 게스트 정보 조회
+     */
+    @Transactional(readOnly = true)
+    public List<GuestResponse> getGuestsByUserId(String userId) {
+        log.info("🔍 [GuestService] getGuestsByUserId 시작 - userId: {}", userId);
+        
+        List<Guest> guests = guestRepository.findByUserId(userId);
+        List<GuestResponse> responses = guests.stream()
+                .map(this::convertToResponse)
+                .toList();
+        
+        log.info("✅ [GuestService] getGuestsByUserId 완료 - userId: {}, 게스트 수: {}", userId, responses.size());
+        return responses;
+    }
+
+    /**
      * 호스트 권한 검증 - WebClient 사용으로 변경 (디버깅 로그 추가)
      */
     private boolean isHost(String appointmentId, String userId) {
