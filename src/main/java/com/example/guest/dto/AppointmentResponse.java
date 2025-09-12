@@ -12,14 +12,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AppointmentResponse {
-    private String appointment_id;
-    private String host_id;
-    private String host_username;
-    private String host_nickname;
+    private String appointmentId;
+    private String hostId;
+    private String hostUsername;
+    private String hostNickname;
     private String title;
     private String description;
-    private LocalDateTime start_time;
-    private LocalDateTime end_time;
-    private String location_id;
-    private String appointment_status;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+    private String locationId;
+    private String appointmentStatus;
 }

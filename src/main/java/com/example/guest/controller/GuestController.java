@@ -187,6 +187,30 @@ public class GuestController {
         }
     }
 
+    // 특정 사용자의 특정 상태 게스트 정보 조회
+    @GetMapping("/guests/user/{user_id}/status/{status}")
+    public ResponseEntity<List<GuestResponse>> getGuestsByUserIdAndStatus(
+            @PathVariable String user_id, 
+            @PathVariable String status) {
+        log.info("🚀 [API 요청 시작] GET /appointments/guests/user/{}/status/{} - user_id: {}, status: {}", 
+                user_id, status, user_id, status);
+        
+        try {
+            List<GuestResponse> guests = guestService.getGuestsByUserIdAndStatus(user_id, status);
+            
+            log.info("✅ [API 요청 성공] GET /appointments/guests/user/{}/status/{} - user_id: {}, status: {}, 게스트 수: {}", 
+                    user_id, status, user_id, status, guests.size());
+            
+            return ResponseEntity.ok(guests);
+            
+        } catch (Exception e) {
+            log.error("💥 [API 요청 실패] GET /appointments/guests/user/{}/status/{} - user_id: {}, status: {}, error: {}", 
+                    user_id, status, user_id, status, e.getMessage(), e);
+            
+            return ResponseEntity.status(500).body(List.of());
+        }
+    }
+
     // 참가자 상태 변경
     @PatchMapping("/{appointment_id}/guests/{guest_id}/guest_status")
     public ResponseEntity<Object> updateGuestStatus(

@@ -45,7 +45,7 @@ public class GuestService {
         // 1. 약속 정보 조회하여 호스트 확인
         try {
             var appointment = appointmentServiceClient.getAppointmentById(appointmentId);
-            if (appointment != null && appointment.getHost_id().equals(request.getUser_id())) {
+            if (appointment != null && appointment.getHostId().equals(request.getUser_id())) {
                 throw new RuntimeException("내가 호스트인 약속에는 참여할 수 없어요!");
             }
         } catch (Exception e) {
@@ -260,6 +260,19 @@ public class GuestService {
         return responses;
     }
 
+    @Transactional(readOnly = true)
+    public List<GuestResponse> getGuestsByUserIdAndStatus(String userId, String status) {
+        log.info("🔍 [GuestService] getGuestsByUserIdAndStatus 시작 - userId: {}, status: {}", userId, status);
+        
+        List<Guest> guests = guestRepository.findByUserIdAndGuestStatus(userId, status);
+        List<GuestResponse> responses = guests.stream()
+                .map(this::convertToResponse)
+                .toList();
+        
+        log.info("✅ [GuestService] getGuestsByUserIdAndStatus 완료 - userId: {}, status: {}, 게스트 수: {}", userId, status, responses.size());
+        return responses;
+    }
+
     /**
      * 호스트 권한 검증 - WebClient 사용으로 변경 (디버깅 로그 추가)
      */
@@ -273,8 +286,8 @@ public class GuestService {
                 throw new RuntimeException("약속을 찾을 수 없습니다. Appointment ID: " + appointmentId);
             }
             
-            // snake_case 필드명 사용 (AppointmentResponse의 host_id 필드)
-            String hostId = appointment.getHost_id();
+            // camelCase 필드명 사용 (AppointmentResponse의 hostId 필드)
+            String hostId = appointment.getHostId();
             log.info("📋 Appointment 정보 조회 성공 - appointmentId: {}, hostId: {}, title: {}", 
                     appointmentId, hostId, appointment.getTitle());
             
